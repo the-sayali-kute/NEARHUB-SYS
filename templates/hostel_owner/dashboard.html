@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Owner Dashboard | NearHub{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Hostel Owner Dashboard</h1>
+        <p class="text-muted mb-0">Welcome, {{ current_user.name }}. Manage your listings and student booking requests.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('add_hostel') }}">+ Add Hostel</a>
+</div>
+
+<section class="mb-5">
+    <h3 class="mb-3">Your Hostel Listings</h3>
+    <div class="row g-3">
+        {% for h in hostels %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                {% if h.photos %}
+                    <img src="{{ url_for('static', filename='uploads/hostels/' ~ h.photos[0].image_filename) }}"
+                         class="card-img-top" alt="{{ h.name }} room photo"
+                         style="height: 190px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ h.name }}</h5>
+                    <p class="card-text text-muted mb-2">{{ h.locality }} · ₹{{ h.rent }}/month</p>
+                    <a href="{{ url_for('hostel_detail', hostel_id=h.id) }}">View listing</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12"><p class="text-muted">You have not added a hostel yet.</p></div>
+        {% endfor %}
+    </div>
+</section>
+
+<section>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h3 class="mb-1">Hostel Booking Requests</h3>
+            <p class="text-muted mb-0">View the student's contact details before responding to a request.</p>
+        </div>
+        <span class="badge text-bg-primary">{{ bookings|length }} request(s)</span>
+    </div>
+
+    {% for b in bookings %}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <strong>Booking #{{ b.id }} · {{ b.hostel.name }}</strong>
+            {% if b.status == 'pending' %}
+                <span class="badge text-bg-warning">Pending</span>
+            {% elif b.status == 'approved' %}
+                <span class="badge text-bg-success">Approved</span>
+            {% elif b.status == 'rejected' %}
+                <span class="badge text-bg-danger">Rejected</span>
+            {% elif b.status == 'cancelled' %}
+                <span class="badge text-bg-secondary">Cancelled</span>
+            {% else %}
+                <span class="badge text-bg-info">{{ b.status|title }}</span>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h5 class="mb-3">Student Contact Details</h5>
+                    <p class="mb-2"><strong>Full name:</strong> {{ b.student.name }}</p>
+                    <p class="mb-2">
+                        <strong>Email:</strong>
+                        <a href="mailto:{{ b.student.email }}">{{ b.student.email }}</a>
+                    </p>
+                    <p class="mb-2">
+                        <strong>Mobile:</strong>
+                        <a href="tel:{{ b.student.phone }}">{{ b.student.phone }}</a>
+                    </p>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <a class="btn btn-outline-primary btn-sm" href="tel:{{ b.student.phone }}">
+                            Call Student
+                        </a>
+                        <a class="btn btn-outline-secondary btn-sm" href="mailto:{{ b.student.email }}">
+                            Email Student
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h5 class="mb-3">Booking Details</h5>
+                    <p class="mb-2"><strong>Hostel:</strong> {{ b.hostel.name }}</p>
+                    <p class="mb-2"><strong>Check-in:</strong> {{ b.start_date.strftime('%d %b %Y') }}</p>
+                    <p class="mb-2"><strong>Check-out:</strong> {{ b.end_date.strftime('%d %b %Y') }}</p>
+                    <p class="mb-2"><strong>Requested on:</strong> {{ b.created_at.strftime('%d %b %Y, %I:%M %p') if b.created_at else 'Not available' }}</p>
+                    {% if b.owner_reason %}
+                    <p class="mb-0"><strong>Decision note:</strong> {{ b.owner_reason }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if b.status == 'pending' %}
+            <hr>
+            <form method="post" action="{{ url_for('booking_decision', booking_id=b.id) }}">
+                <label class="form-label" for="reason-{{ b.id }}">Reason / message to student (optional)</label>
+                <input id="reason-{{ b.id }}" name="reason" class="form-control mb-2"
+                       maxlength="500" placeholder="Add an optional message">
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" name="decision" value="approved" class="btn btn-success">
+                        Approve Request
+                    </button>
+                    <button type="submit" name="decision" value="rejected" class="btn btn-danger">
+                        Reject Request
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-light border">You have not received any booking requests yet.</div>
+    {% endfor %}
+</section>
+{% endblock %}

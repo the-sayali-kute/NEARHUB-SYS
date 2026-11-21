@@ -1,0 +1,372 @@
+
+ {% extends 'base.html' %}
+
+{% block title %}Mess Owner Dashboard | NearHub{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Mess Owner Dashboard</h1>
+        <p class="text-muted mb-0">
+            Welcome, {{ current_user.name }}. Manage your mess business, menus and subscriptions.
+        </p>
+    </div>
+    <a href="{{ url_for('add_mess') }}" class="btn btn-primary">
+        + Add New Mess
+    </a>
+</div>
+
+{# Dashboard Statistics #}
+{% set pending_count = subscriptions|selectattr('status', 'equalto', 'pending')|list|length %}
+{% set approved_count = subscriptions|selectattr('status', 'equalto', 'approved')|list|length %}
+{% set rejected_count = subscriptions|selectattr('status', 'equalto', 'rejected')|list|length %}
+
+<div class="row g-3 mb-5">
+
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted mb-1">My Mess Listings</p>
+                <h2 class="mb-0">{{ messes|length }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted mb-1">Meal Plans</p>
+                <h2 class="mb-0">{{ plans|length }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted mb-1">Pending Requests</p>
+                <h2 class="mb-0 text-warning">{{ pending_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted mb-1">Approved Subscriptions</p>
+                <h2 class="mb-0 text-success">{{ approved_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# Mess Listings #}
+<section class="mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">My Mess Businesses</h3>
+    </div>
+
+    <div class="row g-3">
+
+        {% for m in messes %}
+
+        <div class="col-md-6 col-lg-4">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+
+                        <h5 class="card-title mb-2">{{ m.name }}</h5>
+
+                        {% if m.active %}
+                            <span class="badge text-bg-success">Active</span>
+                        {% else %}
+                            <span class="badge text-bg-secondary">Inactive</span>
+                        {% endif %}
+
+                    </div>
+
+                    <p class="text-muted mb-2">
+                        <strong>Location:</strong> {{ m.locality }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Food:</strong> {{ m.food_type }}
+                    </p>
+
+                    <p class="mb-3">
+                        <strong>Contact:</strong> {{ m.contact_phone or m.owner.phone }}
+                    </p>
+
+                    <a href="{{ url_for('mess_detail', mess_id=m.id) }}"
+                       class="btn btn-outline-primary btn-sm">
+                        Manage Menu & Meal Plans
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% else %}
+
+        <div class="col-12">
+            <div class="alert alert-light border">
+                You haven't added a mess business yet. Start by adding your first mess.
+            </div>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{# Meal Plans #}
+<section class="mb-5">
+
+    <h3 class="mb-3">My Meal Plans</h3>
+
+    <div class="table-responsive">
+
+        <table class="table table-bordered table-hover align-middle">
+
+            <thead class="table-light">
+                <tr>
+                    <th>Plan Name</th>
+                    <th>Mess</th>
+                    <th>Duration</th>
+                    <th>Meals Included</th>
+                    <th>Price</th>
+                    <th>Capacity</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for p in plans %}
+
+                <tr>
+                    <td><strong>{{ p.name }}</strong></td>
+                    <td>{{ p.mess.name }}</td>
+                    <td>{{ p.duration_days }} days</td>
+                    <td>{{ p.meals_included }}</td>
+                    <td>₹{{ p.price }}</td>
+                    <td>{{ p.capacity }} students</td>
+                    <td>
+                        {% if p.active %}
+                            <span class="badge text-bg-success">Active</span>
+                        {% else %}
+                            <span class="badge text-bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% else %}
+
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        No meal plans created yet.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{# Subscription Requests #}
+<section class="mb-5">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+
+        <div>
+            <h3 class="mb-1">Student Subscription Requests</h3>
+            <p class="text-muted mb-0">
+                Review student details and manage their meal subscriptions.
+            </p>
+        </div>
+
+        <span class="badge text-bg-primary">
+            {{ subscriptions|length }} Total Requests
+        </span>
+
+    </div>
+
+    {% for s in subscriptions %}
+
+    <div class="card shadow-sm mb-3">
+
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+
+            <strong>
+                Subscription #{{ s.id }} · {{ s.plan.name }}
+            </strong>
+
+            {% if s.status == 'pending' %}
+                <span class="badge text-bg-warning">Pending</span>
+            {% elif s.status == 'approved' %}
+                <span class="badge text-bg-success">Approved</span>
+            {% elif s.status == 'rejected' %}
+                <span class="badge text-bg-danger">Rejected</span>
+            {% elif s.status == 'cancelled' %}
+                <span class="badge text-bg-secondary">Cancelled</span>
+            {% else %}
+                <span class="badge text-bg-info">{{ s.status|title }}</span>
+            {% endif %}
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-4">
+
+                <div class="col-md-6">
+
+                    <h5 class="mb-3">Student Information</h5>
+
+                    <p class="mb-2">
+                        <strong>Name:</strong> {{ s.student.name }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Email:</strong>
+                        <a href="mailto:{{ s.student.email }}">
+                            {{ s.student.email }}
+                        </a>
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Mobile:</strong>
+                        <a href="tel:{{ s.student.phone }}">
+                            {{ s.student.phone }}
+                        </a>
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+
+                        <a href="tel:{{ s.student.phone }}"
+                           class="btn btn-sm btn-outline-primary">
+                            Call Student
+                        </a>
+
+                        <a href="mailto:{{ s.student.email }}"
+                           class="btn btn-sm btn-outline-secondary">
+                            Email Student
+                        </a>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <h5 class="mb-3">Subscription Information</h5>
+
+                    <p class="mb-2">
+                        <strong>Mess:</strong> {{ s.plan.mess.name }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Meal Plan:</strong> {{ s.plan.name }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Duration:</strong> {{ s.plan.duration_days }} days
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Plan Price:</strong> ₹{{ s.plan.price }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Start Date:</strong> {{ s.start_date.strftime('%d %b %Y') }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>End Date:</strong> {{ s.end_date.strftime('%d %b %Y') }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Requested On:</strong>
+                        {{ s.created_at.strftime('%d %b %Y, %I:%M %p') if s.created_at else 'Not available' }}
+                    </p>
+
+                    {% if s.owner_reason %}
+                    <p class="mb-0">
+                        <strong>Decision Message:</strong> {{ s.owner_reason }}
+                    </p>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% if s.status == 'pending' %}
+
+            <hr>
+
+            <form method="post"
+                  action="{{ url_for('subscription_decision', sub_id=s.id) }}">
+
+                <label for="reason-{{ s.id }}" class="form-label">
+                    Message to Student (Optional)
+                </label>
+
+                <input
+                    type="text"
+                    id="reason-{{ s.id }}"
+                    name="reason"
+                    class="form-control mb-3"
+                    maxlength="500"
+                    placeholder="Enter an optional message for the student">
+
+                <div class="d-flex flex-wrap gap-2">
+
+                    <button type="submit"
+                            name="decision"
+                            value="approved"
+                            class="btn btn-success">
+                        Approve Subscription
+                    </button>
+
+                    <button type="submit"
+                            name="decision"
+                            value="rejected"
+                            class="btn btn-danger">
+                        Reject Subscription
+                    </button>
+
+                </div>
+
+            </form>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    {% else %}
+
+    <div class="alert alert-light border">
+        You haven't received any student subscription requests yet.
+    </div>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

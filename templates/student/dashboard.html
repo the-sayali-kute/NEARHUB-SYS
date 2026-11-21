@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>Student dashboard</h1>
+<p class="muted">Welcome, {{ current_user.name }}.</p>
+
+<div class="d-flex gap-2 mb-4">
+    <a class="btn btn-primary" href="{{ url_for('hostels') }}">
+        Find a hostel
+    </a>
+    <a class="btn btn-outline-primary" href="{{ url_for('messes') }}">
+        Find a mess
+    </a>
+</div>
+
+<h3>My hostel bookings</h3>
+
+<div class="table-responsive">
+    <table class="table">
+        <tr>
+            <th>Hostel</th>
+            <th>Dates</th>
+            <th>Status</th>
+            <th>Owner note</th>
+        </tr>
+
+        {% for b in bookings %}
+        <tr>
+            <td>{{ b.hostel.name }}</td>
+            <td>{{ b.start_date }} – {{ b.end_date }}</td>
+            <td>
+                <span class="badge text-bg-secondary">
+                    {{ b.status }}
+                </span>
+            </td>
+            <td>{{ b.owner_reason or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">No booking requests yet.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<h3 class="mt-4">My mess subscriptions</h3>
+
+<div class="table-responsive">
+    <table class="table">
+        <tr>
+            <th>Mess / Plan</th>
+            <th>Validity</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+
+        {% for s in subscriptions %}
+        <tr>
+            <td>
+                {{ s.plan.mess.name }} / {{ s.plan.name }}
+            </td>
+
+            <td>
+                {{ s.start_date }} – {{ s.end_date }}
+            </td>
+
+            <td>
+                <span class="badge text-bg-secondary">
+                    {{ s.status }}
+                </span>
+            </td>
+
+            <td>
+                {% if s.status == 'pending' or
+                      (s.status == 'approved' and s.start_date > today) %}
+
+                    <form method="POST"
+                          action="{{ url_for('cancel_subscription', sub_id=s.id) }}"
+                          onsubmit="return confirm('Are you sure you want to cancel this subscription?');">
+
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            Cancel
+                        </button>
+
+                    </form>
+
+                {% else %}
+                    <span class="text-muted">Not available</span>
+                {% endif %}
+            </td>
+        </tr>
+
+        {% else %}
+        <tr>
+            <td colspan="4">No subscriptions yet.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}

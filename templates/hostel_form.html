@@ -1,0 +1,244 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="auth-card" style="max-width: 850px; margin: 25px auto;">
+
+    <h2>
+        {{ 'Edit hostel listing' if hostel else 'Add hostel listing' }}
+    </h2>
+
+    <p class="text-muted">
+        {% if hostel %}
+            Update your hostel information and room availability.
+        {% else %}
+            Enter your hostel details to publish your listing on NearHub.
+        {% endif %}
+    </p>
+
+    <form method="post" enctype="multipart/form-data">
+
+        <!-- Basic information -->
+        <h5 class="mt-4 mb-3">Basic Information</h5>
+
+        <label class="form-label">Hostel Name</label>
+        <input class="form-control mb-3"
+               type="text"
+               name="name"
+               value="{{ hostel.name if hostel else '' }}"
+               required>
+
+        <label class="form-label">Locality</label>
+        <input class="form-control mb-3"
+               type="text"
+               name="locality"
+               value="{{ hostel.locality if hostel else '' }}"
+               required>
+
+        <label class="form-label">Full Address</label>
+        <textarea class="form-control mb-3"
+                  name="address"
+                  rows="2"
+                  required>{{ hostel.address if hostel else '' }}</textarea>
+
+        <label class="form-label">Nearby College</label>
+        <input class="form-control mb-3"
+               type="text"
+               name="college"
+               value="{{ hostel.college if hostel else '' }}">
+
+        <!-- Pricing -->
+        <h5 class="mt-4 mb-3">Pricing Details</h5>
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <label class="form-label">Monthly Rent (₹)</label>
+                <input class="form-control mb-3"
+                       type="number"
+                       name="rent"
+                       min="0"
+                       step="0.01"
+                       value="{{ hostel.rent if hostel else '' }}"
+                       required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Security Deposit (₹)</label>
+                <input class="form-control mb-3"
+                       type="number"
+                       name="deposit"
+                       min="0"
+                       step="0.01"
+                       value="{{ hostel.deposit if hostel else 0 }}">
+            </div>
+
+        </div>
+
+        <!-- Room information -->
+        <h5 class="mt-4 mb-3">Room Information</h5>
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <label class="form-label">Room Type</label>
+
+                <select class="form-select mb-3" name="room_type">
+
+                    {% for value in ['Shared', 'Single', 'Double'] %}
+                    <option value="{{ value }}"
+                        {% if hostel and hostel.room_type == value %}selected{% endif %}>
+                        {{ value }}
+                    </option>
+                    {% endfor %}
+
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Gender Policy</label>
+
+                <select class="form-select mb-3" name="gender_policy">
+
+                    {% for value in ['Any', 'Male', 'Female'] %}
+                    <option value="{{ value }}"
+                        {% if hostel and hostel.gender_policy == value %}selected{% endif %}>
+                        {{ value }}
+                    </option>
+                    {% endfor %}
+
+                </select>
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <label class="form-label">Total Number of Rooms</label>
+                <input class="form-control mb-3"
+                       type="number"
+                       name="total_rooms"
+                       min="1"
+                       value="{{ hostel.total_rooms if hostel else 1 }}"
+                       required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Available Rooms</label>
+                <input class="form-control mb-3"
+                       type="number"
+                       name="available_rooms"
+                       min="0"
+                       value="{{ hostel.available_rooms if hostel else 1 }}"
+                       required>
+            </div>
+
+        </div>
+
+        <small class="text-muted">
+            Available rooms cannot exceed the total number of rooms.
+        </small>
+
+        <!-- Contact -->
+        <h5 class="mt-4 mb-3">Contact Information</h5>
+
+        <label class="form-label">Contact Number</label>
+        <input class="form-control mb-3"
+               type="tel"
+               name="contact_phone"
+               value="{{ hostel.contact_phone if hostel and hostel.contact_phone else current_user.phone }}"
+               required>
+
+        <!-- Facilities -->
+        <h5 class="mt-4 mb-3">Additional Information</h5>
+
+        <label class="form-label">Facilities</label>
+        <textarea class="form-control mb-3"
+                  name="facilities"
+                  rows="3"
+                  placeholder="Wi-Fi, CCTV, Laundry, Mess, Parking...">{{ hostel.facilities if hostel and hostel.facilities else '' }}</textarea>
+
+        <label class="form-label">Description</label>
+        <textarea class="form-control mb-3"
+                  name="description"
+                  rows="4"
+                  placeholder="Describe your hostel...">{{ hostel.description if hostel and hostel.description else '' }}</textarea>
+
+        <!-- Hostel room photos -->
+        <h5 class="mt-4 mb-3">Hostel Photos</h5>
+
+        {% if hostel and hostel.photos %}
+            <p class="text-muted">Your current photos are shown below. Select a photo's checkbox to delete it.</p>
+            <div class="row g-3 mb-3">
+                {% for photo in hostel.photos %}
+                    <div class="col-6 col-md-4">
+                        <div class="border rounded p-2 h-100">
+                            <img
+                                src="{{ url_for('static', filename='uploads/hostels/' ~ photo.image_filename) }}"
+                                alt="Hostel room photo"
+                                class="img-fluid rounded"
+                                style="width: 100%; height: 150px; object-fit: cover;"
+                            >
+                            <div class="form-check mt-2">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="delete_photo_ids"
+                                    value="{{ photo.id }}"
+                                    id="delete-photo-{{ photo.id }}"
+                                >
+                                <label class="form-check-label" for="delete-photo-{{ photo.id }}">
+                                    Delete this photo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <label class="form-label" for="hostel_photos">
+            {{ 'Add more photos' if hostel else 'Upload room photos' }}
+        </label>
+        <input
+            class="form-control mb-2"
+            type="file"
+            id="hostel_photos"
+            name="hostel_photos"
+            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+            multiple
+            {% if not hostel or not hostel.photos %}required{% endif %}
+        >
+        <small class="text-muted d-block">
+            Upload 1 to 5 photos in total. JPG, JPEG, PNG or WEBP only.
+            Maximum 5 MB per photo. When editing, the total existing and new photos cannot exceed 5.
+        </small>
+
+        <!-- Buttons -->
+        <div class="mt-4">
+
+            <button type="submit" class="btn btn-primary">
+                {{ 'Save Changes' if hostel else 'Publish Hostel' }}
+            </button>
+
+            {% if hostel %}
+            <a href="{{ url_for('hostel_detail', hostel_id=hostel.id) }}"
+               class="btn btn-outline-secondary ms-2">
+                Cancel
+            </a>
+            {% else %}
+            <a href="{{ url_for('dashboard') }}"
+               class="btn btn-outline-secondary ms-2">
+                Cancel
+            </a>
+            {% endif %}
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

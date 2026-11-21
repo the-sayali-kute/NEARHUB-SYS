@@ -1,0 +1,195 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">AI Hostel Recommendations</h2>
+        <p class="text-muted">
+            Find hostels that best match your location, budget,
+            room preferences and facilities.
+        </p>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+
+            <h5 class="fw-bold mb-3">Tell us your preferences</h5>
+
+            <form method="POST" action="{{ url_for('ai_recommendations') }}">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Preferred Locality</label>
+                        <input
+                            type="text"
+                            name="locality"
+                            class="form-control"
+                            placeholder="e.g. Kothrud, Viman Nagar"
+                            value="{{ preferences.get('locality', '') }}"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Maximum Monthly Budget (₹)</label>
+                        <input
+                            type="number"
+                            name="max_budget"
+                            class="form-control"
+                            min="1"
+                            step="100"
+                            required
+                            placeholder="e.g. 8000"
+                            value="{{ preferences.get('max_budget', '') }}"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Preferred Room Type</label>
+                        <input
+                            type="text"
+                            name="room_type"
+                            class="form-control"
+                            placeholder="e.g. Single, Double, Shared"
+                            value="{{ preferences.get('room_type', '') }}"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Gender Preference</label>
+                        <input
+                            type="text"
+                            name="gender_policy"
+                            class="form-control"
+                            placeholder="e.g. Boys, Girls, Any"
+                            value="{{ preferences.get('gender_policy', '') }}"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Required Facilities</label>
+                        <input
+                            type="text"
+                            name="facilities"
+                            class="form-control"
+                            placeholder="e.g. WiFi, AC, Laundry, Parking"
+                            value="{{ preferences.get('facilities', '') }}"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">College / Institution</label>
+                        <input
+                            type="text"
+                            name="college"
+                            class="form-control"
+                            placeholder="e.g. VIT Pune"
+                            value="{{ preferences.get('college', '') }}"
+                        >
+                    </div>
+
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        Find My AI Recommendations
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    {% if recommendations %}
+
+        <h4 class="fw-bold mb-3">Recommended Hostels</h4>
+
+        <div class="row g-4">
+
+            {% for item in recommendations %}
+
+                {% set hostel = item.hostel %}
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="card h-100 shadow-sm border-0">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="fw-bold mb-0">
+                                    {{ hostel.name }}
+                                </h5>
+
+                                <span class="badge bg-success">
+                                    {{ item.match_score }}% Match
+                                </span>
+                            </div>
+
+                            <p class="text-muted mb-2">
+                                <strong>Location:</strong>
+                                {{ hostel.locality or 'Not specified' }}
+                            </p>
+
+                            <p class="mb-2">
+                                <strong>Monthly Rent:</strong>
+                                ₹{{ hostel.rent }}
+                            </p>
+
+                            <p class="mb-2">
+                                <strong>Room Type:</strong>
+                                {{ hostel.room_type or 'Not specified' }}
+                            </p>
+
+                            <p class="mb-2">
+                                <strong>Gender Policy:</strong>
+                                {{ hostel.gender_policy or 'Not specified' }}
+                            </p>
+
+                            <p class="mb-3">
+                                <strong>Facilities:</strong>
+                                {{ hostel.facilities or 'Not specified' }}
+                            </p>
+
+                            <a
+                                href="{{ url_for('hostel_detail', hostel_id=hostel.id) }}"
+                                class="btn btn-outline-primary w-100"
+                            >
+                                View Hostel Details
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% elif request.method == 'POST' %}
+
+        <div class="alert alert-warning">
+            No suitable hostels found for your preferences.
+            Try changing your preferences or increasing your budget.
+        </div>
+
+    {% else %}
+
+        <div class="text-center py-4">
+            <h5>Find your ideal student accommodation</h5>
+            <p class="text-muted">
+                Enter your preferences above to get AI-powered hostel recommendations.
+            </p>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block title %}NearHub | Student accommodation & dining{% endblock %}
+{% block content %}
+<section class="hero p-5 rounded-4 mb-5"><div class="row align-items-center"><div class="col-lg-8"><p class="eyebrow">YOUR CAMPUS, YOUR COMMUNITY</p><h1>Find a place to stay.<br><span>Find food that feels like home.</span></h1><p class="lead">Discover student hostels and mess services around your college.</p><a class="btn btn-primary btn-lg me-2" href="{{ url_for('hostels') }}">Explore hostels</a><a class="btn btn-outline-dark btn-lg" href="{{ url_for('messes') }}">Explore messes</a></div></div></section>
+<div class="d-flex justify-content-between align-items-center mb-3"><h2>Featured hostels</h2><a href="{{ url_for('hostels') }}">View all</a></div>
+<div class="row g-3 mb-5">{% for h in hostels %}<div class="col-md-4"><div class="listing-card"><div class="p-3"><h5>{{ h.name }}</h5><p class="muted">{{ h.locality }}</p><strong>₹{{ h.rent }}/month</strong><a class="btn btn-sm btn-outline-primary float-end" href="{{ url_for('hostel_detail',hostel_id=h.id) }}">Details</a></div></div></div>{% else %}<p>No hostel listings yet.</p>{% endfor %}</div>
+<div class="d-flex justify-content-between align-items-center mb-3"><h2>Featured messes</h2><a href="{{ url_for('messes') }}">View all</a></div>
+<div class="row g-3">{% for m in messes %}<div class="col-md-4"><div class="listing-card p-3"><h5>{{ m.name }}</h5><p class="muted">{{ m.locality }} · {{ m.food_type }}</p><a href="{{ url_for('mess_detail',mess_id=m.id) }}">View menu & plans</a></div></div>{% else %}<p>No mess listings yet.</p>{% endfor %}</div>
+{% endblock %}
